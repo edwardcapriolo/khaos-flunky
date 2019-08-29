@@ -1,0 +1,30 @@
+PATH_TO_INIT=$PATH_TO_INIT
+FAULT_IN_SECONDS=${FAULT_IN_SECONDS:=60}
+HOSTNAME=$HOSTNAME
+INITIAL_WAIT=${INITIAL_WAIT:=300}
+MY_PID=$$
+if [[ ! -x "$PATH_TO_INIT" ]] ; then
+  echo "kHaos: script not found"
+  exit 1
+fi
+echo "kHaos: Will run ($PATH_TO_INIT stop) on $HOSTNAME for $FAULT_IN_SECONDS in $INITIAL_WAIT seconds."
+echo "kHaos: run (kill $MY_PID) to stop the auto shutdown."
+sleep $INITIAL_WAIT
+PRE_CHECK=`$PATH_TO_INIT status`
+if [[ "$PRE_CHECK" != "running" ]] ; then
+  echo "kHaos will not ensue as process is already stopped"
+  echo 2
+fi
+STOP=`$PATH_TO_INIT stop`
+#while status != stopped
+#echo "send stop to script. But process is still running after X seconds.Khaos will not continue"
+echo "kHaos: Process confirmed stopped. Will attempt to start in $FAULT_IN_SECONDS"
+sleep $FAULT_IN_SECONDS
+RESTART=`$PATH_TO_INIT start`
+START_STATUS=$?
+STATUS_AFTER_START=`$PATH_TO_INIT status`
+if [[ "$STATUS_AFTER_START" ~"running" ]] ; then
+  echo "kHaos: Unable to revive $PATH_TO_INIT. Manual intervention required"
+  echo 3
+fi
+echo "kHaos: Application $PATH_TO_INIT restarted."
